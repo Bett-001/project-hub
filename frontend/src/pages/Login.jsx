@@ -19,34 +19,41 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate login
-    setTimeout(() => {
-      if (email === 'admin@moringa.com') {
-        localStorage.setItem('user', JSON.stringify({
-          id: '4',
-          email: 'admin@moringa.com',
-          name: 'Grace Muthoni',
-          role: 'admin',
-          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Grace'
-        }));
-        navigate('/admin');
-      } else {
-        localStorage.setItem('user', JSON.stringify({
-          id: '1',
-          email,
-          name: 'John Kamau',
-          role: 'student',
-          cohort: 'MC-45',
-          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John'
-        }));
-        navigate('/dashboard');
-      }
-      toast({
-        title: "Welcome back!",
-        description: "You've successfully logged in.",
+    try {
+      const response = await fetch('http://localhost:8000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
       });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('access_token', data.access_token);
+        
+        toast({
+          title: "Welcome back!",
+          description: "You've successfully logged in.",
+        });
+        
+        navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
+      } else {
+        toast({
+          title: "Login failed",
+          description: data.detail || "Invalid credentials",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Could not connect to server",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (

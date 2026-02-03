@@ -36,24 +36,45 @@ export default function Register() {
 
     setLoading(true);
     
-    // Simulate registration
-    setTimeout(() => {
-      localStorage.setItem('user', JSON.stringify({
-        id: 'new-user',
-        email: formData.email,
-        name: formData.name,
-        role: 'student',
-        cohort: formData.cohort,
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.name}`
-      }));
-      
-      toast({
-        title: "Account created!",
-        description: "Welcome to ProjectBank. Let's get started!",
+    try {
+      const response = await fetch('http://localhost:8000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          cohort: formData.cohort,
+          role: 'student'
+        })
       });
-      navigate('/dashboard');
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('access_token', data.access_token);
+        toast({
+          title: "Account created!",
+          description: "Welcome to ProjectBank. Let's get started!",
+        });
+        navigate('/dashboard');
+      } else {
+        toast({
+          title: "Registration failed",
+          description: data.detail || "Something went wrong",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Could not connect to server",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (

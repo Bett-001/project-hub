@@ -15,10 +15,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { mockProjects, mockCohorts, techStackOptions } from '@/data/mockData';
 import { FolderKanban, Users, GitBranch, Plus, Github, ExternalLink, Calendar, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [user, setUser] = useState(null);
+  const [projects, setProjects] = useState([]);
   const [filters, setFilters] = useState({ cohort: '', techStack: '', search: '' });
   const [selectedProject, setSelectedProject] = useState(null);
   const [showAddProject, setShowAddProject] = useState(false);
@@ -33,10 +36,29 @@ export default function Dashboard() {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+      fetchProjects();
     } else {
       navigate('/login');
     }
   }, [navigate]);
+
+  const fetchProjects = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      
+      const headers = token ? {
+        'Authorization': `Bearer ${token}`
+      } : {};
+      
+      const response = await fetch('http://localhost:8000/api/projects/', { headers });
+      if (response.ok) {
+        const data = await response.json();
+        setProjects(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -44,22 +66,73 @@ export default function Dashboard() {
   };
 
   const filteredProjects = useMemo(() => {
-    return mockProjects.filter((project) => {
+    return projects.filter((project) => {
       const matchesCohort = !filters.cohort || project.cohort === filters.cohort;
-      const matchesTech = !filters.techStack || project.techStack.includes(filters.techStack);
+      const matchesTech = !filters.techStack || project.tech_stack?.includes(filters.techStack);
       const matchesSearch = !filters.search || 
         project.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-        project.description.toLowerCase().includes(filters.search.toLowerCase());
+        project.description?.toLowerCase().includes(filters.search.toLowerCase());
       
       return matchesCohort && matchesTech && matchesSearch;
     });
-  }, [filters]);
+  }, [filters, projects]);
 
   const stats = useMemo(() => ({
-    totalProjects: mockProjects.length,
+    totalProjects: projects.length,
     totalCohorts: mockCohorts.length,
-    totalStudents: new Set(mockProjects.flatMap(p => p.members.map(m => m.id))).size,
-  }), []);
+    totalStudents: new Set(projects.flatMap(p => p.members?.map(m => m.id) || [])).size,
+  }), [projects]);
+
+  const handleAddProject = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const token = localStorage.getItem('access_token');
+      
+      const response = await fetch('http://localhost:8000/api/projects/', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: newProject.name,
+          description: newProject.description || null,
+          github_url: newProject.githubUrl,
+          live_url: null,
+          cohort: user.cohort || 'MC-45',
+          tech_stack: newProject.techStack,
+          member_ids: []
+        })
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success!",
+          description: "Project added successfully",
+        });
+        setShowAddProject(false);
+        setNewProject({ name: '', description: '', githubUrl: '', techStack: [] });
+        fetchProjects();
+      } else {
+        const data = await response.json();
+        const errorMsg = data.detail ? 
+          (Array.isArray(data.detail) ? data.detail[0].msg : data.detail) : 
+          "Failed to add project";
+        toast({
+          title: "Error",
+          description: errorMsg,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Could not connect to server",
+        variant: "destructive",
+      });
+    }
+  };
 
   const toggleTechStack = (tech) => {
     setNewProject(prev => ({
@@ -172,7 +245,7 @@ export default function Dashboard() {
                 <div>
                   <h4 className="text-sm font-medium mb-2 text-muted-foreground">Tech Stack</h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedProject.techStack.map((tech) => (
+                    {selectedProject.tech_stack?.map((tech) => (
                       <TechBadge key={tech} tech={tech} size="md" />
                     ))}
                   </div>
@@ -181,7 +254,7 @@ export default function Dashboard() {
                 <div>
                   <h4 className="text-sm font-medium mb-3 text-muted-foreground">Team Members</h4>
                   <div className="space-y-3">
-                    {selectedProject.members.map((member, idx) => (
+                    {selectedProject.members?.map((member, idx) => (
                       <div key={member.id} className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={member.avatar} alt={member.name} />
@@ -203,20 +276,20 @@ export default function Dashboard() {
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    Updated {formatDistanceToNow(new Date(selectedProject.updatedAt), { addSuffix: true })}
+                    Updated {formatDistanceToNow(new Date(selectedProject.updated_at), { addSuffix: true })}
                   </span>
                 </div>
 
                 <div className="flex gap-3 pt-4 border-t">
                   <Button asChild className="flex-1">
-                    <a href={selectedProject.githubUrl} target="_blank" rel="noopener noreferrer">
+                    <a href={selectedProject.github_url} target="_blank" rel="noopener noreferrer">
                       <Github className="h-4 w-4 mr-2" />
                       View on GitHub
                     </a>
                   </Button>
-                  {selectedProject.liveUrl && (
+                  {selectedProject.live_url && (
                     <Button variant="outline" asChild className="flex-1">
-                      <a href={selectedProject.liveUrl} target="_blank" rel="noopener noreferrer">
+                      <a href={selectedProject.live_url} target="_blank" rel="noopener noreferrer">
                         <ExternalLink className="h-4 w-4 mr-2" />
                         Live Demo
                       </a>
@@ -239,7 +312,7 @@ export default function Dashboard() {
             </DialogDescription>
           </DialogHeader>
           
-          <form className="space-y-4 mt-4">
+          <form onSubmit={handleAddProject} className="space-y-4 mt-4">
             <div className="space-y-2">
               <Label htmlFor="projectName">Project Name</Label>
               <Input

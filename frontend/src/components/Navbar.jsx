@@ -59,7 +59,7 @@ export function Navbar({ isAuthenticated = false, user, onLogout }) {
                     <Avatar className="h-9 w-9">
                       <AvatarImage src={user.avatar} alt={user.name} />
                       <AvatarFallback className="bg-primary text-primary-foreground">
-                        {user.name.split(' ').map(n => n[0]).join('')}
+                        {user.name?.split(' ').map(n => n[0]).join('') || 'U'}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -69,7 +69,7 @@ export function Navbar({ isAuthenticated = false, user, onLogout }) {
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user.avatar} alt={user.name} />
                       <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                        {user.name.split(' ').map(n => n[0]).join('')}
+                        {user.name?.split(' ').map(n => n[0]).join('') || 'U'}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">

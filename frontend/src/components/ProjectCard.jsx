@@ -22,15 +22,15 @@ export function ProjectCard({ project, onClick }) {
             </p>
           </div>
           <div className="flex -space-x-2">
-            {project.members.slice(0, 3).map((member, index) => (
+            {project.members?.slice(0, 3).map((member, index) => (
               <Avatar key={member.id} className="h-8 w-8 border-2 border-card">
                 <AvatarImage src={member.avatar} alt={member.name} />
                 <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                  {member.name.split(' ').map(n => n[0]).join('')}
+                  {member.name?.split(' ').map(n => n[0]).join('') || 'U'}
                 </AvatarFallback>
               </Avatar>
             ))}
-            {project.members.length > 3 && (
+            {project.members?.length > 3 && (
               <div className="h-8 w-8 rounded-full bg-muted border-2 border-card flex items-center justify-center text-xs font-medium text-muted-foreground">
                 +{project.members.length - 3}
               </div>
@@ -45,12 +45,12 @@ export function ProjectCard({ project, onClick }) {
         </p>
         
         <div className="flex flex-wrap gap-1.5">
-          {project.techStack.slice(0, 4).map((tech) => (
+          {project.tech_stack?.slice(0, 4).map((tech) => (
             <TechBadge key={tech} tech={tech} />
           ))}
-          {project.techStack.length > 4 && (
+          {project.tech_stack?.length > 4 && (
             <span className="text-xs text-muted-foreground px-2 py-0.5">
-              +{project.techStack.length - 4} more
+              +{project.tech_stack.length - 4} more
             </span>
           )}
         </div>
@@ -60,11 +60,11 @@ export function ProjectCard({ project, onClick }) {
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Users className="h-3.5 w-3.5" />
-            {project.members.length}
+            {project.members?.length || 0}
           </span>
           <span className="flex items-center gap-1">
             <Calendar className="h-3.5 w-3.5" />
-            {formatDistanceToNow(new Date(project.updatedAt), { addSuffix: true })}
+            {formatDistanceToNow(new Date(project.updated_at), { addSuffix: true })}
           </span>
         </div>
         
@@ -75,19 +75,19 @@ export function ProjectCard({ project, onClick }) {
             className="h-8 w-8"
             onClick={(e) => {
               e.stopPropagation();
-              window.open(project.githubUrl, '_blank');
+              window.open(project.github_url, '_blank');
             }}
           >
             <Github className="h-4 w-4" />
           </Button>
-          {project.liveUrl && (
+          {project.live_url && (
             <Button 
               variant="ghost" 
               size="icon" 
               className="h-8 w-8"
               onClick={(e) => {
                 e.stopPropagation();
-                window.open(project.liveUrl, '_blank');
+                window.open(project.live_url, '_blank');
               }}
             >
               <ExternalLink className="h-4 w-4" />
