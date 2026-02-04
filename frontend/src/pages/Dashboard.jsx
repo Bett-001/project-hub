@@ -44,7 +44,7 @@ export default function Dashboard() {
 
   const fetchProjects = async () => {
     try {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem('token');
       
       const headers = token ? {
         'Authorization': `Bearer ${token}`
@@ -87,7 +87,7 @@ export default function Dashboard() {
     e.preventDefault();
     
     try {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem('token');
       
       const response = await fetch('http://localhost:8000/api/projects/', {
         method: 'POST',

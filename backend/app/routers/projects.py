@@ -79,6 +79,10 @@ def delete_project(project_id: int, db: Session = Depends(get_db), current_user:
     if project.owner_id != current_user.id and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
+    # Delete related records first
+    db.query(ProjectTech).filter(ProjectTech.project_id == project_id).delete()
+    db.query(ProjectMember).filter(ProjectMember.project_id == project_id).delete()
+    
     db.delete(project)
     db.commit()
     return {"message": "Project deleted"}
