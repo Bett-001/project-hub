@@ -8,7 +8,7 @@ from ..utils.auth import get_current_user
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
-@router.get("", response_model=List[ProjectResponse])
+@router.get("")
 def get_projects(cohort: Optional[str] = None, tech: Optional[str] = None, db: Session = Depends(get_db)):
     query = db.query(Project)
     if cohort:
@@ -19,7 +19,7 @@ def get_projects(cohort: Optional[str] = None, tech: Optional[str] = None, db: S
     projects = query.all()
     return [format_project(p, db) for p in projects]
 
-@router.post("", response_model=ProjectResponse)
+@router.post("")
 def create_project(project: ProjectCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     db_project = Project(
         name=project.name,
@@ -42,14 +42,14 @@ def create_project(project: ProjectCreate, db: Session = Depends(get_db), curren
     db.commit()
     return format_project(db_project, db)
 
-@router.get("/{project_id}", response_model=ProjectResponse)
+@router.get("/{project_id}")
 def get_project(project_id: int, db: Session = Depends(get_db)):
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     return format_project(project, db)
 
-@router.put("/{project_id}", response_model=ProjectResponse)
+@router.put("/{project_id}")
 def update_project(project_id: int, project_update: ProjectUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:

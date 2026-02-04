@@ -30,7 +30,7 @@ export default function Login() {
 
       if (response.ok) {
         localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('token', data.access_token);
         
         toast({
           title: "Welcome back!",
@@ -166,8 +166,8 @@ export default function Login() {
 
               <div className="mt-6 p-4 bg-muted rounded-lg">
                 <p className="text-xs text-muted-foreground mb-2">Demo credentials:</p>
-                <p className="text-xs"><strong>Admin:</strong> admin@moringa.com</p>
-                <p className="text-xs"><strong>Student:</strong> any other email</p>
+                <p className="text-xs"><strong>Admin:</strong> admin@moringa.com / admin123</p>
+                <p className="text-xs"><strong>Student:</strong> Register a new account</p>
               </div>
             </CardContent>
           </Card>
